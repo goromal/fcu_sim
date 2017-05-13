@@ -34,17 +34,6 @@
     <arg name="model2"               value="$(find fcu_sim)/agents/$(arg boat_name)/$(arg boat_name).xacro" />
   </include>
   
-  <!-- Spawn Boat-->  
-  <!-- <include file="$(find fcu_sim)/launch/spawn_mav.launch">
-    <arg name="mav_name"            value="$(arg boat_name)" />
-    <arg name="model"               value="$(find fcu_sim)/agents/$(arg boat_name)/$(arg boat_name).xacro" />
-    <arg name="x"                   value="$(arg x)"/>
-    <arg name="y"                   value="$(arg y)"/>
-    <arg name="z"                   value="5.0"/>
-    <arg name="yaw"                 value="$(arg yaw)"/>
-    <arg name="color"               value="$(arg color)"/>
-  </include> -->
-
   <!-- Controller -->
   <group ns="$(arg mav_name)">
 
@@ -85,4 +74,10 @@
       <remap from="image" to="/$(arg mav_name)/camera/rgb"/>
     </node> -->
   </group>
+
+  <node name="boat_teleporter" pkg="fcu_sim_plugins" type="boat_teleport.py" output="screen">
+  </node>
+
+  <node name="boat_command" pkg="fcu_sim_plugins" type="boat_cmd.py" output="screen">
+  </node>
 </launch>

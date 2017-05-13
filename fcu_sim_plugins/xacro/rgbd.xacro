@@ -19,7 +19,7 @@
       image_camera_info_topic="rgb/camera_info"
       depth_camera_info_topic="depth/camera_info"
       pointcloud_topic="camera/pointcloud">
-      <origin xyz="0.127 0 -0.0889" rpy="0 0 0" /> <!-- for shredder -->
+      <origin xyz="0.127 0 -0.0889" rpy="0 ${pi/2} 0" /> <!-- for shredder -->
     </xacro:depth_camera>
   </xacro:macro>
 
