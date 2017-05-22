@@ -23,7 +23,7 @@
     </inertial>
 
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="10 0 0" rpy="0 0 0" />
       <geometry>
         <xacro:if value="${use_mesh_file}">
           <mesh filename="${mesh_file}" scale="0.25 0.25 0.25" />
@@ -35,7 +35,7 @@
     </visual>
 
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="10 0 0" rpy="0 0 0" />
       <geometry>
         <cylinder length="${body_height}" radius="${body_width}"/>
       </geometry>

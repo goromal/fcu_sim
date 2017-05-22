@@ -15,10 +15,10 @@ class move:
     def __init__(self):
 
         self.boat_pub = rospy.Publisher('boat_command', Pose, queue_size=1)
-	self.joy_sub = rospy.Subscriber('/joy_throttled', Joy, self.joy_callback, queue_size=1)
+	#self.joy_sub = rospy.Subscriber('/joy_throttled', Joy, self.joy_callback, queue_size=1)
 
         self.cmd = Pose()
-	self.cmd.position.x = 0.0 # desired x position
+	self.cmd.position.x = -10.0 # desired x position
 	self.cmd.position.y = 0.0 # desired y position
 	self.cmd.position.z = 0.0 # desired z altitude
 	self.cmd.orientation.x = 0.0 # desired roll angle
@@ -26,11 +26,14 @@ class move:
 	self.cmd.orientation.z = 0.0 # desired yaw angle
 	self.cmd.orientation.w = 0.0 # Will go unused, for now (not using quaternion notation)
 
-        #self.update_rate = 10.0
-        #self.update_timer_ = rospy.Timer(rospy.Duration(1.0/self.update_rate), self.publish)
+        self.update_rate = 10.0
+        self.update_timer_ = rospy.Timer(rospy.Duration(1.0/self.update_rate), self.update)
 
-        #self.start_time = rospy.get_time()
+        self.start_time = rospy.get_time()
+	self.current_time = self.start_time
         self.omega = 1.0/5.0
+
+	self.boat_pub.publish(self.cmd) # ----------------?
 
     def joy_callback(self, Joy):
 	#print('callback called.')
@@ -74,6 +77,16 @@ class move:
 		else:
 			self.cmd.orientation.x = -1.5
 	self.boat_pub.publish(self.cmd)
+
+    def update(self, event):
+	self.current_time = rospy.get_time()
+	time = self.current_time - self.start_time
+	self.cmd.position.y = 15.0*math.cos(0.75*time)
+	self.cmd.orientation.x = 0.75*math.sin(1.75*time)
+	self.cmd.orientation.y = 0.75*math.sin(1.2*time)
+	#print(5.0*math.sin(0.1*time))
+	self.boat_pub.publish(self.cmd)
+	
 
 if __name__ == "__main__":
 

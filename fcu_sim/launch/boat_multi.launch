@@ -51,7 +51,7 @@
 
     <!-- Waypoint Manager -->
     <node name="waypoint_manager" pkg="ros_copter" type="waypoint_manager.py" output="screen">
-      <rosparam command="load" file="$(find ros_copter)/params/waypoints.yaml"/>
+      <rosparam command="load" file="$(find ros_copter)/params/boat_waypoints.yaml"/>
       <remap from="waypoint" to="high_level_command"/>
       <remap from="state" to="ground_truth/odometry"/>
     </node>
