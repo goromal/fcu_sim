@@ -87,6 +87,12 @@ add_library(multirotor_forces_and_moments_plugin
 target_link_libraries(multirotor_forces_and_moments_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
 add_dependencies(multirotor_forces_and_moments_plugin ${catkin_EXPORTED_TARGETS} fcu_common_generate_messages_cpp)
 
+add_library(boat_forces_and_moments_plugin
+  src/boat_forces_and_moments.cpp
+  include/fcu_sim_plugins/boat_forces_and_moments.h)
+target_link_libraries(boat_forces_and_moments_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
+add_dependencies(boat_forces_and_moments_plugin ${catkin_EXPORTED_TARGETS} fcu_common_generate_messages_cpp)
+
 add_library(magnetometer_plugin
   src/magnetometer.cpp
 include/fcu_sim_plugins/magnetometer.h)
@@ -182,6 +188,7 @@ install(
     airspeed_plugin
     ROSflight_sil_plugin
     multirotor_forces_and_moments_plugin
+    boat_forces_and_moments_plugin
     aircraft_forces_and_moments_plugin
     magnetometer_plugin
     step_camera
