@@ -3,74 +3,75 @@
 <robot name="boat" xmlns:xacro="http://ros.org/wiki/xacro">
 
   <!-- Properties -->
-  <xacro:property name="namespace" value="boat" />
+	<xacro:property name="boat_dict" value="${load_yaml('boat.yaml')}" />
+	<xacro:property name="boat_type" value="${boat_dict['boat_type']}" />
+	<xacro:property name="aruco_num" value="${boat_dict['aruco_num']}" />
+	<xacro:property name="namespace" value="boat" />
   <xacro:property name="use_mesh_file" value="true" />
-  <xacro:property name="mesh_file" value="package://fcu_sim/meshes/Boat/boat.dae" />
-  <xacro:property name="mass" value="2.0" />
-  <xacro:property name="body_width" value="0.505" />
-  <xacro:property name="body_height" value="0.1" />
+  <xacro:property name="mesh_file" value="package://fcu_sim/meshes/Boat/${boat_type}_boat.dae" />
+	<xacro:property name="aruco_mesh_file_1" value="package://fcu_sim/meshes/Boat/arucos/aruco${aruco_num}.dae" /> <!--aruco4 doesn't work for some reason...-->
+  <xacro:property name="body_width" value="0.505" /> <!--+++++++++++++++++++-->
+  <xacro:property name="body_height" value="0.1" />  <!--+++++++++++++++++++-->
   <xacro:property name="body_inertia">
     <inertia ixx="0.05" ixy="0.0" ixz="0.0" iyy="0.05" iyz="0.0" izz="0.05" />
   </xacro:property>
 
-
   <!-- *********************** GAZEBO ROBOT DEFINITION ******************* -->
+  <!-- Define the base link, which represents the boat itself -->
   <link name="${namespace}/base_link">
     <inertial>
-      <mass value="${mass}" />  <!-- [kg] -->
-      <origin xyz="10 0 0" />
+      <mass value="${boat_dict['boat_mass']}" />  <!-- [kg] -->
+      <origin xyz="0 0 0" />
       <xacro:insert_block name="body_inertia" />
     </inertial>
-
-    <visual>
-      <origin xyz="10 0 0" rpy="0 0 0" />
-      <geometry>
-        <xacro:if value="${use_mesh_file}">
-          <mesh filename="${mesh_file}" scale="0.25 0.25 0.25" />
-        </xacro:if>
-        <xacro:unless value="${use_mesh_file}">
-          <cylinder length="${body_height}" radius="${body_width}"/>
-        </xacro:unless>
+		<visual>
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			<geometry>
+        <xacro:if value="${boat_type == 'patrol'}">
+          <mesh filename="${mesh_file}" scale="0.55 0.55 0.55" />
+				</xacro:if>
+        <xacro:if value="${boat_type == 'pontoon'}">
+					<mesh filename="${mesh_file}" scale="1 1 1" />
+				</xacro:if>
       </geometry>
-    </visual>
-
+		</visual>
     <collision>
-      <origin xyz="10 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
         <cylinder length="${body_height}" radius="${body_width}"/>
       </geometry>
     </collision>
   </link>
+  <!-- Define the aruco link, which is attached to the base link via a rigid joint -->
+  <link name="${namespace}/aruco_link_1">
+    <visual>
+			<xacro:if value="${boat_type == 'patrol'}">
+				<origin xyz="0 -3.5 -0.2" rpy="0 0 0" />
+			</xacro:if>
+			<xacro:if value="${boat_type == 'pontoon'}">
+				<origin xyz="0 -1.5 0.225" rpy="0 0 0" />
+			</xacro:if>
+			<geometry>
+				<mesh filename="${aruco_mesh_file_1}" scale="1.4 1.4 1.4" />
+			</geometry>
+		</visual>
+	</link>
+	<joint name="boat_to_aruco_1" type="fixed">
+		<parent link="${namespace}/base_link"/>
+		<child link="${namespace}/aruco_link_1"/>
+	</joint>
 
   <gazebo reference="${namespace}/base_link">
     <material>Gazebo/$(arg color)</material>
   </gazebo>
 
-
   <!-- ************************* FORCES AND MOMENTS ********************** -->
 
-  <!-- ROSflight_SIL -->
-  <!--<xacro:include filename="$(find fcu_sim_plugins)/xacro/ROSflight_SIL.xacro"/>-->
-  
   <xacro:include filename="$(find fcu_sim_plugins)/xacro/boat_forces_and_moments.xacro"/>
   <xacro:boat_controller
   	namespace="${namespace}"
   	command_topic="boat_command"/>
-  
-  <!-- ************************ GIMBAL COMMANDER ********************** -->
-  <!-- should not be used; does not move the boat but rather a hypothetical camera
-       according to the boat's orientation.
-  <xacro:include filename="$(find fcu_sim_plugins)/xacro/boat_tow.xacro"/>
-  <xacro:gimbal_BOAT
-  	namespace="${namespace}"
-  	parent_link="${namespace}/base_link"
-  	camera_topic="${namespace}/boatcam/data"
-  	frame_rate="1"
-  	pose_topic="${namespace}/boatpose"
-  	command_topic="${namespace}/boat_command"
-  	use_slipring="true">
-  	<origin xyz="10 0 0" rpy="0 0 0"/>
-  </xacro:gimbal_BOAT> -->
+
 
   <!-- ***************** SENSORS ******************* -->
   <!-- Ground Truth (Odometry plugin gets orientation info from gazebo and publishes it

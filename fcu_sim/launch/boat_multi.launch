@@ -6,10 +6,13 @@
   <arg name="mav_name"            default="mikey"/>
   <arg name="boat_name"           default="boat"/>
   <arg name="color"               default="White"/>
-  <arg name="x"                   default="0"/>
-  <arg name="y"                   default="0"/>
-  <arg name="z"                   default="0.1"/>
+  <arg name="x"                   default="0"/>   	 <!-- ====================== -->
+  <arg name="y"                   default="0"/>   	 <!-- = Mikey initial pos == -->
+  <arg name="z"                   default="0.1"/> 	 <!-- ====================== -->
   <arg name="yaw"                 default="0"/>
+	<arg name="x2"									default="-10.0"/>	 <!-- ====================== -->
+	<arg name="y2"									default="0"/>			 <!-- == Boat initial pos == -->
+	<arg name="z2"									default="0"/>			 <!-- ====================== -->
 
   <arg name="world_file" default="boat.world"/>
 
@@ -28,12 +31,15 @@
     <arg name="x"                   value="$(arg x)"/>
     <arg name="y"                   value="$(arg y)"/>
     <arg name="z"                   value="$(arg z)"/>
+		<arg name="x2"                   value="$(arg x2)"/>
+    <arg name="y2"                   value="$(arg y2)"/>
+    <arg name="z2"                   value="$(arg z2)"/>
     <arg name="yaw"                 value="$(arg yaw)"/>
     <arg name="color"               value="$(arg color)"/>
     <arg name="boat_name"            value="$(arg boat_name)" />
     <arg name="model2"               value="$(find fcu_sim)/agents/$(arg boat_name)/$(arg boat_name).xacro" />
   </include>
-  
+
   <!-- MAV Controller Nodes -->
   <group ns="$(arg mav_name)">
 
@@ -51,7 +57,7 @@
 
     <!-- Waypoint Manager -->
     <node name="waypoint_manager" pkg="ros_copter" type="waypoint_manager.py" output="screen">
-      <rosparam command="load" file="$(find ros_copter)/params/boat_waypoints.yaml"/>
+      <rosparam command="load" file="$(find fcu_sim)/agents/$(arg mav_name)/boat_waypoints.yaml"/>
       <remap from="waypoint" to="high_level_command"/>
       <remap from="state" to="ground_truth/odometry"/>
     </node>
@@ -60,28 +66,22 @@
 
   <!-- BOAT Controller Nodes -->
   <group ns="$(arg boat_name)">
-  
-  	<!-- Load controller parameters -->
+
+  	<!-- Load controller parameters within namespace-->
   	<rosparam command="load" file="$(find fcu_sim)/agents/$(arg boat_name)/$(arg boat_name).yaml"/>
-  
-  	<!-- Here I will need a node that commands the boat's orientation on a topic that
-  		 the gimbal plugin will be looking for.+++++++++++++++++++++++++++++++++++-->
-  	<node name="boat_command" pkg="fcu_sim_plugins" type="boat_cmd.py" output="screen" />
-  
+
+  	<!-- Boat controller-->
+  	<!--<node name="boat_command" pkg="fcu_sim_plugins" type="boat_cmd.py" output="screen" />-->
+		<node pkg="fcu_sim_plugins" name="boat_command" type="boat_commander"/>
+
   </group>
 
-<!-- Joystick Controller -->
+<!-- Joystick Controller, in case joy control is toggled -->
+
 <node pkg="joy" name="joystick" type="joy_node">
 	<param name="autorepeat_rate" value="10"/>
 </node>
 
 <node pkg="topic_tools" name="joy_throttler" type="throttle" args="messages /joy 10 /joy_throttled" />
 
-<!--
-  <node name="boat_teleporter" pkg="fcu_sim_plugins" type="boat_teleport.py" output="screen">
-  </node>
-
-  <node name="boat_command" pkg="fcu_sim_plugins" type="boat_cmd.py" output="screen">
-  </node>
--->
 </launch>

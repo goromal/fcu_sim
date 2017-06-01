@@ -176,6 +176,12 @@ add_library(world_utilities
 target_link_libraries(world_utilities ${catkin_LIBRARIES} ${GAZEBO_libraries})
 add_dependencies(world_utilities ${catkin_EXPORTED_TARGETS})
 
+# Boat Controller Node
+add_executable(boat_commander
+	src/boat_command.cpp
+	include/fcu_sim_plugins/boat_command.h)
+target_link_libraries(boat_commander ${catkin_LIBRARIES})
+add_dependencies(boat_commander ${catkin_EXPORTED_TARGETS}) # ?????????????
 
 install(
   TARGETS
