@@ -1,0 +1,6 @@
+waypoints:
+ [[-10, -15, -10],
+ [-10, 15, -10]]
+
+threshold: 5
+cyle: True
