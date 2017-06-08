@@ -166,10 +166,13 @@ void BoatForcesAndMoments::UpdateForcesAndMoments()
 	double pn = W_pose_W_C.pos.x;
 	double pe = W_pose_W_C.pos.y;
 	double pd = W_pose_W_C.pos.z;
-	math::Vector3 euler_angles = W_pose_W_C.rot.GetAsEuler();
-	double phi = euler_angles.x;
-	double theta = euler_angles.y;
-	double psi = euler_angles.z;
+	math::Vector3 euler_angles = W_pose_W_C.rot.GetAsEuler(); // I suspect that this is at the root of the singularity problem. ++++++++++++++++++++++
+	double phi = euler_angles.x; // roll
+	double theta = euler_angles.y; // pitch
+	double psi = euler_angles.z; // yaw, wrapped between -pi and pi
+
+	//std::cout << psi << std::endl; // -------------------------------------------------------------
+
 	math::Vector3 C_linear_velocity_W_C = link_->GetRelativeLinearVel();
 	double u = C_linear_velocity_W_C.x;
 	double v = C_linear_velocity_W_C.y;
@@ -190,27 +193,28 @@ void BoatForcesAndMoments::UpdateForcesAndMoments()
 		actual_forces_.Fy = y_controller_.computePID(command_.position.y, pe, sampling_time_);
 		actual_forces_.Fz = z_controller_.computePID(command_.position.z, pd, sampling_time_)
 													 + mass_ * gravity_;
+
+		while (command_.orientation.x - phi < -M_PI)
+			phi -= 2*M_PI;
+		while (command_.orientation.x - phi > M_PI)
+			phi += 2*M_PI;
+
 		actual_forces_.l = roll_controller_.computePID(command_.orientation.x, phi, sampling_time_);
+
+		while (command_.orientation.y - theta < -M_PI)
+			theta -= 2*M_PI;
+		while (command_.orientation.y - theta > M_PI)
+			theta += 2*M_PI;
+
 		actual_forces_.m = pitch_controller_.computePID(command_.orientation.y, theta, sampling_time_);
+
+		while (command_.orientation.z - psi < -M_PI) // psi too large
+			psi -= 2*M_PI;
+		while (command_.orientation.z - psi > M_PI) // psi too small
+			psi += 2*M_PI;
+
 		actual_forces_.n = yaw_controller_.computePID(command_.orientation.z, psi, sampling_time_);
 	}
-
-	// publish attitude like ROSflight
-	fcu_common::Attitude attitude_msg;
-	common::Time current_time  = world_->GetSimTime();
-	attitude_msg.header.stamp.sec = current_time.sec;
-	attitude_msg.header.stamp.nsec = current_time.nsec;
-	attitude_msg.attitude.w =  actual_forces_.m;//W_pose_W_C.rot.w;
-	attitude_msg.attitude.x =  pn - command_.position.x;//W_pose_W_C.rot.x;
-	attitude_msg.attitude.y =  pe - command_.position.y;//W_pose_W_C.rot.y;
-	attitude_msg.attitude.z =  pd - command_.position.z;//W_pose_W_C.rot.z;
-
-	attitude_msg.angular_velocity.x = phi - command_.orientation.x;//p;
-	attitude_msg.angular_velocity.y = theta - command_.orientation.y;//q;
-	attitude_msg.angular_velocity.z = psi - command_.orientation.z;//r;
-
-	attitude_pub_.publish(attitude_msg);
-
 }
 
 double BoatForcesAndMoments::sat(double x, double max, double min)

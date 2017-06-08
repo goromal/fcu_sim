@@ -9,7 +9,7 @@
 #define FCU_SIM_FCU_SIM_PLUGINS_INCLUDE_FCU_SIM_PLUGINS_BOAT_FORCES_AND_MOMENTS_H_
 
 #include <stdio.h>
-//#include <iostream> // ------------------------------------------
+#include <iostream> // ------------------------------------------
 
 #include <vector>
 #include <boost/bind.hpp>

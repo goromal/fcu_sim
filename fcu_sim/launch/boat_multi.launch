@@ -68,11 +68,17 @@
   <group ns="$(arg boat_name)">
 
   	<!-- Load controller parameters within namespace-->
-  	<rosparam command="load" file="$(find fcu_sim)/agents/$(arg boat_name)/$(arg boat_name).yaml"/>
+  	<rosparam command="load" file="$(find fcu_sim)/agents/$(arg boat_name)/$(arg boat_name).yaml"/> <!-- boat simulator params -->
 
-  	<!-- Boat controller-->
-  	<!--<node name="boat_command" pkg="fcu_sim_plugins" type="boat_cmd.py" output="screen" />-->
-		<node pkg="fcu_sim_plugins" name="boat_command" type="boat_commander"/>
+		<!-- Boat path planner -->
+		<node pkg="ros_boat" name="ros_boat_path_planner" type="boat_path_planner.py" output="screen" />
+
+		<!-- Boat path manager -->
+		<node pkg="ros_boat" name="ros_boat_path_manager" type="boat_path_manager.py" output="screen" />
+
+  	<!-- Boat path follower -->
+  	<rosparam command="load" file="$(find ros_boat)/param/boat.yaml" ns="boat_commander"/> <!-- ros_boat follower params -->
+		<node pkg="ros_boat" name="boat_commander" type="ros_boat_path_follower" output="screen"/>
 
   </group>
 

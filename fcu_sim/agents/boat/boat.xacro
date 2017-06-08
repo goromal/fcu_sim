@@ -46,10 +46,10 @@
   <link name="${namespace}/aruco_link_1">
     <visual>
 			<xacro:if value="${boat_type == 'patrol'}">
-				<origin xyz="0 -3.5 -0.2" rpy="0 0 0" />
+				<origin xyz="3.5 0 -0.2" rpy="0 0 0" />
 			</xacro:if>
 			<xacro:if value="${boat_type == 'pontoon'}">
-				<origin xyz="0 -1.5 0.225" rpy="0 0 0" />
+				<origin xyz="1.75 0 0.225" rpy="0 0 0" />
 			</xacro:if>
 			<geometry>
 				<mesh filename="${aruco_mesh_file_1}" scale="1.4 1.4 1.4" />
