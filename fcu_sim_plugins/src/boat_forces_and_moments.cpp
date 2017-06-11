@@ -208,10 +208,23 @@ void BoatForcesAndMoments::UpdateForcesAndMoments()
 
 		actual_forces_.m = pitch_controller_.computePID(command_.orientation.y, theta, sampling_time_);
 
+		fcu_common::Attitude attitude_msg; // ----------------------------------------------
+		attitude_msg.header.stamp.sec = 0.0; // ----------------------------------------------------
+		attitude_msg.header.stamp.nsec = 0.0; // ----------------------------------------------------
+		attitude_msg.angular_velocity.x = 0.0; // ----------------------------------------------------
+		attitude_msg.angular_velocity.y = 0.0; // ----------------------------------------------------
+		attitude_msg.angular_velocity.z = 0.0; // ----------------------------------------------------
+		attitude_msg.attitude.w = 0.0; // ----------------------------------------------------
+		attitude_msg.attitude.x = command_.orientation.z; // ----------------------------------------------------
+		attitude_msg.attitude.y = psi; // ----------------------------------------------------
+
 		while (command_.orientation.z - psi < -M_PI) // psi too large
 			psi -= 2*M_PI;
 		while (command_.orientation.z - psi > M_PI) // psi too small
 			psi += 2*M_PI;
+
+		attitude_msg.attitude.z = psi; // ----------------------------------------------------
+		attitude_pub_.publish(attitude_msg); // -----------------------------------------------
 
 		actual_forces_.n = yaw_controller_.computePID(command_.orientation.z, psi, sampling_time_);
 	}
