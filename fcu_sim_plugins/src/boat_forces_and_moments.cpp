@@ -23,6 +23,8 @@ BoatForcesAndMoments::BoatForcesAndMoments()
 	angularPgain_ = 0.0;
 	angularIgain_ = 0.0;
 	angularDgain_ = 0.0;
+    linearSat_ = 0.0;
+    angularSat_ = 0.0;
 }
 
 BoatForcesAndMoments::~BoatForcesAndMoments()
@@ -79,6 +81,8 @@ void BoatForcesAndMoments::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 	angularPgain_ = nh_->param<double>("ANGULAR_P_GAIN", 0.01);
 	angularIgain_ = nh_->param<double>("ANGULAR_I_GAIN", 0.0);
 	angularDgain_ = nh_->param<double>("ANGULAR_D_GAIN", 0.05);
+    linearSat_ = nh_->param<double>("LINEAR_SATURATION", 0.1); // ????????????????????????????????????????
+    angularSat_ = nh_->param<double>("ANGULAR_SATURATION", 0.1);
 
 	// Get PID Gains
 	double xP, xI, xD;
@@ -166,12 +170,10 @@ void BoatForcesAndMoments::UpdateForcesAndMoments()
 	double pn = W_pose_W_C.pos.x;
 	double pe = W_pose_W_C.pos.y;
 	double pd = W_pose_W_C.pos.z;
-	math::Vector3 euler_angles = W_pose_W_C.rot.GetAsEuler(); // I suspect that this is at the root of the singularity problem. ++++++++++++++++++++++
+    math::Vector3 euler_angles = W_pose_W_C.rot.GetAsEuler();
 	double phi = euler_angles.x; // roll
 	double theta = euler_angles.y; // pitch
 	double psi = euler_angles.z; // yaw, wrapped between -pi and pi
-
-	//std::cout << psi << std::endl; // -------------------------------------------------------------
 
 	math::Vector3 C_linear_velocity_W_C = link_->GetRelativeLinearVel();
 	double u = C_linear_velocity_W_C.x;
@@ -189,6 +191,8 @@ void BoatForcesAndMoments::UpdateForcesAndMoments()
 	}
 	else
 	{
+        // ** Currently only saturating angular forces; update linearSat_ in yaml
+        // ** and in code if linear saturation needed
 		actual_forces_.Fx = x_controller_.computePID(command_.position.x, pn, sampling_time_);
 		actual_forces_.Fy = y_controller_.computePID(command_.position.y, pe, sampling_time_);
 		actual_forces_.Fz = z_controller_.computePID(command_.position.z, pd, sampling_time_)
@@ -199,34 +203,33 @@ void BoatForcesAndMoments::UpdateForcesAndMoments()
 		while (command_.orientation.x - phi > M_PI)
 			phi += 2*M_PI;
 
-		actual_forces_.l = roll_controller_.computePID(command_.orientation.x, phi, sampling_time_);
+        actual_forces_.l = sat(
+                               roll_controller_.computePID(command_.orientation.x, phi, sampling_time_),
+                               angularSat_,
+                               -angularSat_
+                              );
 
 		while (command_.orientation.y - theta < -M_PI)
 			theta -= 2*M_PI;
 		while (command_.orientation.y - theta > M_PI)
 			theta += 2*M_PI;
 
-		actual_forces_.m = pitch_controller_.computePID(command_.orientation.y, theta, sampling_time_);
-
-		fcu_common::Attitude attitude_msg; // ----------------------------------------------
-		attitude_msg.header.stamp.sec = 0.0; // ----------------------------------------------------
-		attitude_msg.header.stamp.nsec = 0.0; // ----------------------------------------------------
-		attitude_msg.angular_velocity.x = 0.0; // ----------------------------------------------------
-		attitude_msg.angular_velocity.y = 0.0; // ----------------------------------------------------
-		attitude_msg.angular_velocity.z = 0.0; // ----------------------------------------------------
-		attitude_msg.attitude.w = 0.0; // ----------------------------------------------------
-		attitude_msg.attitude.x = command_.orientation.z; // ----------------------------------------------------
-		attitude_msg.attitude.y = psi; // ----------------------------------------------------
+        actual_forces_.m = sat(
+                               pitch_controller_.computePID(command_.orientation.y, theta, sampling_time_),
+                               angularSat_,
+                               -angularSat_
+                              );
 
 		while (command_.orientation.z - psi < -M_PI) // psi too large
 			psi -= 2*M_PI;
 		while (command_.orientation.z - psi > M_PI) // psi too small
 			psi += 2*M_PI;
 
-		attitude_msg.attitude.z = psi; // ----------------------------------------------------
-		attitude_pub_.publish(attitude_msg); // -----------------------------------------------
-
-		actual_forces_.n = yaw_controller_.computePID(command_.orientation.z, psi, sampling_time_);
+        actual_forces_.n = sat(
+                               yaw_controller_.computePID(command_.orientation.z, psi, sampling_time_),
+                               angularSat_,
+                               -angularSat_
+                              );
 	}
 }
 

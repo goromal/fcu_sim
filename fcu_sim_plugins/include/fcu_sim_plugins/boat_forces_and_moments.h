@@ -70,6 +70,8 @@ private:
   double angularPgain_;
   double angularIgain_;
   double angularDgain_;
+  double linearSat_;
+  double angularSat_;
 
   // container for forces
   struct ForcesAndTorques{
